@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # Frontend
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:4000
+    depends_on:
+      - api-gateway
+
+  # API Gateway
+  api-gateway:
+    build: ./backend/api-gateway
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=development
+      - USER_SERVICE_URL=http://user-service:3001
+      - PRODUCT_SERVICE_URL=http://product-service:3002
+      - ORDER_SERVICE_URL=http://order-service:3003
+      - PAYMENT_SERVICE_URL=http://payment-service:3004
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/ecommerce
+    depends_on:
+      - postgres
+      - user-service
+      - product-service
+      - order-service
+      - payment-service
+
+  # Backend Services
+  user-service:
+    build: ./backend/user-service
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/ecommerce
+      - JWT_SECRET=your-jwt-secret-here
+    depends_on:
+      - postgres
+
+  product-service:
+    build: ./backend/product-service
+    ports:
+      - "3002:3002"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/ecommerce
+    depends_on:
+      - postgres
+
+  order-service:
+    build: ./backend/order-service
+    ports:
+      - "3003:3003"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/ecommerce
+      - PAYMENT_SERVICE_URL=http://payment-service:3004
+    depends_on:
+      - postgres
+      - payment-service
+
+  payment-service:
+    build: ./backend/payment-service
+    ports:
+      - "3004:3004"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/ecommerce
+
+  # Database
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=ecommerce
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

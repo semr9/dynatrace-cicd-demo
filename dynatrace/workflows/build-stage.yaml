@@ -1,0 +1,84 @@
+# Dynatrace Workflow for Build Stage Automation
+# This workflow monitors build logs and automates CI/CD processes
+
+workflow:
+  name: "Build Stage Monitoring"
+  description: "Monitors build stage logs and automates error handling"
+  trigger:
+    type: "log"
+    conditions:
+      - logSource: "jenkins"
+        query: "content CONTAINS 'BUILD_START'"
+  tasks:
+    - name: "look_for_build_errors"
+      type: "DQL"
+      query: |
+        fetch logs
+        | filter content contains "ERROR" or content contains "FAILED"
+        | filter log.source == "jenkins"
+        | summarize count() by timestamp
+        | filter count > 0
+      action:
+        type: "conditional"
+        conditions:
+          - when: "result.count > 0"
+            then:
+              - name: "stop_the_jenkins_job"
+                type: "HTTP"
+                config:
+                  url: "https://jenkins.example.com/job/ecommerce-demo/build/stop"
+                  method: "POST"
+                  headers:
+                    Authorization: "Bearer ${JENKINS_TOKEN}"
+              - name: "send_alert_to_team"
+                type: "SLACK"
+                config:
+                  webhook: "${SLACK_WEBHOOK}"
+                  message: "Build failed for ecommerce-demo. Job has been stopped automatically."
+                  channel: "#dev-alerts"
+          - when: "result.count == 0"
+            then:
+              - name: "proceed_to_deploy"
+                type: "HTTP"
+                config:
+                  url: "https://jenkins.example.com/job/ecommerce-demo-deploy/build"
+                  method: "POST"
+                  headers:
+                    Authorization: "Bearer ${JENKINS_TOKEN}"
+
+---
+# Alternative workflow for Harness CI/CD
+workflow:
+  name: "Harness Build Monitoring"
+  description: "Monitors Harness build pipeline and automates responses"
+  trigger:
+    type: "log"
+    conditions:
+      - logSource: "harness"
+        query: "content CONTAINS 'BUILD_EXECUTION'"
+  tasks:
+    - name: "analyze_build_logs"
+      type: "DQL"
+      query: |
+        fetch logs
+        | filter log.source == "harness"
+        | filter content contains "ERROR" or content contains "FAILURE"
+        | summarize error_count = count() by timestamp
+      action:
+        type: "conditional"
+        conditions:
+          - when: "result.error_count > 0"
+            then:
+              - name: "stop_harness_pipeline"
+                type: "HTTP"
+                config:
+                  url: "https://app.harness.io/api/pipelines/${PIPELINE_ID}/executions/${EXECUTION_ID}/abort"
+                  method: "POST"
+                  headers:
+                    Authorization: "Bearer ${HARNESS_TOKEN}"
+              - name: "notify_team"
+                type: "SLACK"
+                config:
+                  webhook: "${SLACK_WEBHOOK}"
+                  message: "Harness pipeline failed. Execution has been aborted."
+                  channel: "#dev-alerts"

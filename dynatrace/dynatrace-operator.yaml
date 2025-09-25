@@ -1,0 +1,42 @@
+apiVersion: dynatrace.com/v1beta1
+kind: DynaKube
+metadata:
+  name: dynakube
+  namespace: ecommerce-demo
+spec:
+  apiUrl: "https://your-environment-id.live.dynatrace.com"
+  tokens: "dynatrace-token"
+  oneAgent:
+    classicFullStack:
+      enabled: true
+      env:
+        - name: "DT_TAGS"
+          value: "environment=production,service=ecommerce-demo,team=platform"
+        - name: "DT_CUSTOM_PROP"
+          value: "ServiceName=#{.workload.labels.app}"
+    applicationMonitoring:
+      enabled: true
+      useCSIDriver: true
+    dataStorages:
+      - volumeName: "oneagent-1"
+        volumeSource: "csi"
+        storageId: "oneagent"
+  activeGate:
+    capabilities:
+      - routing
+      - kubernetes-monitoring
+      - dynatrace-metrics-ingest
+    env:
+      - name: "DT_TAGS"
+        value: "environment=production,role=activegate"
+  networkZone: "ecommerce-demo-zone"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dynatrace-token
+  namespace: ecommerce-demo
+type: Opaque
+data:
+  token: "your-base64-encoded-dynatrace-token"

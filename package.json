@@ -1,0 +1,33 @@
+{
+  "name": "dynatrace-cicd-demo",
+  "version": "1.0.0",
+  "description": "E-commerce demo application for Dynatrace CI/CD automation testing",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend/api-gateway && npm run dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build:all",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd frontend && npm test",
+    "test:backend": "cd backend && npm run test:all",
+    "test:scenarios": "node scripts/test-scenarios.js",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "k8s:deploy": "kubectl apply -f k8s/",
+    "k8s:delete": "kubectl delete -f k8s/",
+    "setup": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "workspaces": [
+    "frontend",
+    "backend/*"
+  ],
+  "keywords": ["dynatrace", "cicd", "automation", "microservices", "ecommerce"],
+  "author": "Dynatrace Consultant",
+  "license": "MIT"
+}

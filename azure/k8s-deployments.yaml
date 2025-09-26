@@ -7,7 +7,7 @@ metadata:
   name: frontend
   namespace: dynatrace-cicd
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: frontend
@@ -23,11 +23,11 @@ spec:
         - containerPort: 80
         resources:
           requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
             memory: "128Mi"
             cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -35,7 +35,7 @@ metadata:
   name: api-gateway
   namespace: dynatrace-cicd
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: api-gateway
@@ -60,11 +60,11 @@ spec:
           value: "http://payment-service:3004"
         resources:
           requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
             memory: "128Mi"
             cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -72,7 +72,7 @@ metadata:
   name: user-service
   namespace: dynatrace-cicd
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: user-service
@@ -99,11 +99,11 @@ spec:
               key: JWT_SECRET
         resources:
           requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
             memory: "128Mi"
             cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -111,7 +111,7 @@ metadata:
   name: product-service
   namespace: dynatrace-cicd
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: product-service
@@ -133,11 +133,11 @@ spec:
               key: DATABASE_URL
         resources:
           requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
             memory: "128Mi"
             cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -145,7 +145,7 @@ metadata:
   name: order-service
   namespace: dynatrace-cicd
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: order-service
@@ -172,11 +172,11 @@ spec:
               key: REDIS_URL
         resources:
           requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
             memory: "128Mi"
             cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -184,7 +184,7 @@ metadata:
   name: payment-service
   namespace: dynatrace-cicd
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: payment-service
@@ -206,11 +206,11 @@ spec:
               key: DATABASE_URL
         resources:
           requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
             memory: "128Mi"
             cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "200m"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -234,8 +234,8 @@ spec:
         - containerPort: 6379
         resources:
           requests:
+            memory: "32Mi"
+            cpu: "25m"
+          limits:
             memory: "64Mi"
             cpu: "50m"
-          limits:
-            memory: "128Mi"
-            cpu: "100m"

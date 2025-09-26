@@ -9,17 +9,17 @@ location: "East US"
 acrName: "dynatracecicdacr"
 acrSku: "Basic"
 
-# Azure Database for PostgreSQL
+# Azure Database for PostgreSQL (Cost-optimized for testing)
 postgresServerName: "dynatrace-cicd-postgres"
 postgresAdminLogin: "dynatraceadmin"
 postgresAdminPassword: "Dynatrace2025!"
 postgresDatabaseName: "ecommerce"
-postgresSku: "B_Gen5_1"
+postgresSku: "B_Gen5_1"  # Basic tier, 1 vCore, 2GB RAM
 
-# Azure Kubernetes Service
+# Azure Kubernetes Service (Cost-optimized for testing)
 aksClusterName: "dynatrace-cicd-aks"
-aksNodeCount: 2
-aksVmSize: "Standard_B2s"
+aksNodeCount: 1  # Reduced from 2 to 1 node
+aksVmSize: "Standard_B1s"  # Smaller VM: 1 vCPU, 1GB RAM (was B2s: 2 vCPU, 4GB RAM)
 aksVersion: "1.28"
 
 # Application Configuration

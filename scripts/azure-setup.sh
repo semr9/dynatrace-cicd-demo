@@ -121,17 +121,18 @@ show_deployment_options() {
 
 # Show cost estimation
 show_cost_estimation() {
-    print_status "Estimated Azure Costs (per month):"
+    print_status "Estimated Azure Costs (per month) - TESTING OPTIMIZED:"
     echo ""
     echo "Resource Group: Free"
     echo "Azure Container Registry (Basic): ~$5"
     echo "Azure Database for PostgreSQL (B_Gen5_1): ~$25"
-    echo "Azure Kubernetes Service (2x Standard_B2s): ~$60"
+    echo "Azure Kubernetes Service (1x Standard_B1s): ~$15"
     echo "Load Balancer: ~$20"
-    echo "Total: ~$110/month"
+    echo "Total: ~$65/month (40% savings!)"
     echo ""
     print_warning "Costs may vary based on usage and region."
     print_status "Remember to delete resources when done to avoid charges."
+    print_status "This configuration is optimized for testing purposes."
     echo ""
 }
 

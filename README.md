@@ -69,13 +69,13 @@ open http://localhost:3000
    nano azure/config.yaml
    ```
 
-2. **Create Azure Resources**
+2. **Create Azure Resources (Cost-Optimized for Testing)**
    ```bash
    # Create resource group, ACR, PostgreSQL, and AKS
    az group create --name dynatrace-cicd-rg --location "East US"
    az acr create --resource-group dynatrace-cicd-rg --name dynatracecicdacr --sku Basic
    az postgres server create --resource-group dynatrace-cicd-rg --name dynatrace-cicd-postgres --location "East US" --admin-user dynatraceadmin --admin-password "Dynatrace2025!" --sku-name B_Gen5_1
-   az aks create --resource-group dynatrace-cicd-rg --name dynatrace-cicd-aks --node-count 2 --node-vm-size Standard_B2s --attach-acr dynatracecicdacr
+   az aks create --resource-group dynatrace-cicd-rg --name dynatrace-cicd-aks --node-count 1 --node-vm-size Standard_B1s --attach-acr dynatracecicdacr
    ```
 
 3. **Build and Push Images**

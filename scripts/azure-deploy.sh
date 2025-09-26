@@ -137,18 +137,18 @@ create_aks() {
         # Get ACR login server
         ACR_LOGIN_SERVER=$(az acr show --name "$acrName" --resource-group "$resourceGroup" --query loginServer --output tsv)
         
-        # Create AKS cluster
-        az aks create \
-            --resource-group "$resourceGroup" \
-            --name "$aksClusterName" \
-            --node-count "$aksNodeCount" \
-            --node-vm-size "$aksVmSize" \
-            --kubernetes-version "$aksVersion" \
-            --attach-acr "$acrName" \
-            --enable-managed-identity \
-            --enable-addons monitoring \
-            --generate-ssh-keys \
-            --output table
+    # Create AKS cluster (cost-optimized for testing)
+    az aks create \
+        --resource-group "$resourceGroup" \
+        --name "$aksClusterName" \
+        --node-count "$aksNodeCount" \
+        --node-vm-size "$aksVmSize" \
+        --kubernetes-version "$aksVersion" \
+        --attach-acr "$acrName" \
+        --enable-managed-identity \
+        --enable-addons monitoring \
+        --generate-ssh-keys \
+        --output table
         
         print_success "AKS cluster created"
     fi

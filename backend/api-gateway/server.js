@@ -29,38 +29,7 @@ app.use(morgan('combined', { stream: { write: message => logger.info(message.tri
 
 
 
-// Custom JSON parser to handle malformed JSON
-app.use((req, res, next) => {
-  if (req.method === 'POST' && req.get('Content-Type')?.includes('application/json')) {
-    let body = '';
-    req.on('data', chunk => {
-      body += chunk.toString();
-    });
-    req.on('end', () => {
-      try {
-        // Try to parse the malformed JSON
-        let cleanBody = body;
-        
-        // Fix the malformed JSON issues
-        cleanBody = cleanBody.replace(/{\s*"/, '{"'); // Remove space after opening brace
-        cleanBody = cleanBody.replace(/\\:/g, ':'); // Fix escaped colons
-        cleanBody = cleanBody.replace(/\\,/g, ','); // Fix escaped commas
-        
-        console.log('Original body:', body);
-        console.log('Cleaned body:', cleanBody);
-        
-        req.body = JSON.parse(cleanBody);
-        next();
-      } catch (err) {
-        console.error('JSON parsing error:', err);
-        console.error('Original body:', body);
-        res.status(400).json({ error: 'Invalid JSON format' });
-      }
-    });
-  } else {
-    next();
-  }
-});
+app.use(express.json());
 
 // Health check endpoint 
 app.get('/health', (req, res) => {

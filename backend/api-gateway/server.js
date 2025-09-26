@@ -27,9 +27,41 @@ app.use(helmet());
 app.use(cors());
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 
+// Raw body logging middleware (before express.json)
+app.use((req, res, next) => {
+  if (req.method === 'POST' && req.path.includes('/cart')) {
+    let rawBody = '';
+    
+    req.on('data', (chunk) => {
+      rawBody += chunk.toString();
+    });
+    
+    req.on('end', () => {
+      console.log('=== RAW REQUEST BODY DEBUG ===');
+      console.log('Path:', req.path);
+      console.log('Content-Type:', req.get('Content-Type'));
+      console.log('Raw Body:', rawBody);
+      console.log('Raw Body Length:', rawBody.length);
+      console.log('Raw Body Hex:', Buffer.from(rawBody).toString('hex'));
+      console.log('Raw Body Bytes:', [...Buffer.from(rawBody)]);
+      console.log('================================');
+      
+      logger.info('Raw request body debug:', {
+        path: req.path,
+        contentType: req.get('Content-Type'),
+        rawBody: rawBody,
+        rawBodyLength: rawBody.length,
+        rawBodyHex: Buffer.from(rawBody).toString('hex'),
+        rawBodyBytes: [...Buffer.from(rawBody)]
+      });
+    });
+  }
+  next();
+});
+
 app.use(express.json());
 
-// Health check endpoint
+// Health check endpoint 
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'healthy', 
@@ -106,12 +138,6 @@ app.use('/api/cart', createProxyMiddleware({
   }
 }));
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  logger.error('API Gateway Error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
 // 404 handler
 app.use('*', (req, res) => {
   logger.warn('Route not found: ' + req.method + ' ' + req.originalUrl);
@@ -121,4 +147,11 @@ app.use('*', (req, res) => {
 app.listen(PORT, () => {
   logger.info('API Gateway running on port ' + PORT);
   console.log('API Gateway running on port ' + PORT);
+});
+
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  logger.error('API Gateway Error:', err);
+  res.status(500).json({ error: 'Internal server error' });
 });

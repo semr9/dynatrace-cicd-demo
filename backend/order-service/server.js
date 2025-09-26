@@ -76,6 +76,13 @@ app.get('/cart', async (req, res) => {
 
 app.post('/cart/add', async (req, res) => {
   try {
+    // Debug logging
+    logger.info('Cart add request received:', {
+      body: req.body,
+      headers: req.headers,
+      contentType: req.get('Content-Type')
+    });
+    
     const { productId, quantity = 1 } = req.body;
     const userId = 1; // Default user for demo
     

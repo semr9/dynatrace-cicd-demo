@@ -4,8 +4,7 @@ metadata:
   name: app-config
   namespace: dynatrace-cicd
 data:
-  # Database connection will be updated during deployment
-  DATABASE_URL: "postgresql://dynatraceadmin:Dynatrace2025!@dynatrace-cicd-postgres.postgres.database.azure.com:5432/ecommerce?sslmode=require"
-  REDIS_URL: "redis://redis-service:6379"
-  JWT_SECRET: "dynatrace-cicd-jwt-secret-2025"
-  NODE_ENV: "production"
+  DATABASE_URL: postgresql://postgres:password@postgres-service:5432/ecommerce
+  REDIS_URL: redis://redis-service:6379
+  JWT_SECRET: dynatrace-cicd-jwt-secret-2025
+  NODE_ENV: production

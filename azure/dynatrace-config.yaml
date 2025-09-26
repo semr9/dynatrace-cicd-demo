@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dynatrace-config
+  namespace: dynatrace-cicd
+data:
+  DT_TENANT: " YOUR_DYNATRACE_TENANT_ID\
+ DT_API_TOKEN: \YOUR_DYNATRACE_API_TOKEN\
+ DT_CLUSTER_ID: \dynatrace-cicd-aks\
+ DT_CONNECTIVITY: \true\

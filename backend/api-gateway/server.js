@@ -42,6 +42,9 @@ app.get('/health', (req, res) => {
 app.use('/api/users', createProxyMiddleware({
   target: process.env.USER_SERVICE_URL || 'http://localhost:3001',
   changeOrigin: true,
+  pathRewrite: {
+    '^/api': ''
+  },
   logLevel: 'debug',
   onError: (err, req, res) => {
     logger.error('User service proxy error:', err);
@@ -52,6 +55,9 @@ app.use('/api/users', createProxyMiddleware({
 app.use('/api/products', createProxyMiddleware({
   target: process.env.PRODUCT_SERVICE_URL || 'http://localhost:3002',
   changeOrigin: true,
+  pathRewrite: {
+    '^/api': ''
+  },
   logLevel: 'debug',
   onError: (err, req, res) => {
     logger.error('Product service proxy error:', err);
@@ -62,6 +68,9 @@ app.use('/api/products', createProxyMiddleware({
 app.use('/api/orders', createProxyMiddleware({
   target: process.env.ORDER_SERVICE_URL || 'http://localhost:3003',
   changeOrigin: true,
+  pathRewrite: {
+    '^/api': ''
+  },
   logLevel: 'debug',
   onError: (err, req, res) => {
     logger.error('Order service proxy error:', err);
@@ -72,6 +81,9 @@ app.use('/api/orders', createProxyMiddleware({
 app.use('/api/payments', createProxyMiddleware({
   target: process.env.PAYMENT_SERVICE_URL || 'http://localhost:3004',
   changeOrigin: true,
+  pathRewrite: {
+    '^/api': ''
+  },
   logLevel: 'debug',
   onError: (err, req, res) => {
     logger.error('Payment service proxy error:', err);
@@ -83,6 +95,9 @@ app.use('/api/payments', createProxyMiddleware({
 app.use('/api/cart', createProxyMiddleware({
   target: process.env.ORDER_SERVICE_URL || 'http://localhost:3003',
   changeOrigin: true,
+  pathRewrite: {
+    '^/api': ''
+  },
   logLevel: 'debug',
   onError: (err, req, res) => {
     logger.error('Cart service proxy error:', err);
@@ -98,11 +113,11 @@ app.use((err, req, res, next) => {
 
 // 404 handler
 app.use('*', (req, res) => {
-  logger.warn(`Route not found: ${req.method} ${req.originalUrl}`);
+  logger.warn('Route not found: ' + req.method + ' ' + req.originalUrl);
   res.status(404).json({ error: 'Route not found' });
 });
 
 app.listen(PORT, () => {
-  logger.info(`API Gateway running on port ${PORT}`);
-  console.log(`API Gateway running on port ${PORT}`);
+  logger.info('API Gateway running on port ' + PORT);
+  console.log('API Gateway running on port ' + PORT);
 });

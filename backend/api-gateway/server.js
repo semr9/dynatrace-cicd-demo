@@ -27,6 +27,29 @@ app.use(helmet());
 app.use(cors());
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 
+// Raw body logging middleware (before express.json)
+app.use((req, res, next) => {
+  if (req.method === 'POST' && req.path.includes('/cart')) {
+    let rawBody = '';
+    req.setEncoding('utf8');
+    
+    req.on('data', (chunk) => {
+      rawBody += chunk;
+    });
+    
+    req.on('end', () => {
+      logger.info('Raw request body (before parsing):', {
+        path: req.path,
+        contentType: req.get('Content-Type'),
+        rawBody: rawBody,
+        rawBodyLength: rawBody.length,
+        rawBodyBytes: Buffer.from(rawBody).toString('hex')
+      });
+    });
+  }
+  next();
+});
+
 app.use(express.json());
 
 // Debug middleware to log parsed request body

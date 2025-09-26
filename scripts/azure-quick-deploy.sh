@@ -212,6 +212,16 @@ step4_deploy_app() {
     print_status "Creating namespace: $appNamespace"
     kubectl create namespace "$appNamespace" --dry-run=client -o yaml | kubectl apply -f -
     
+    # Create ACR secret for image pulling
+    print_status "Creating ACR secret for image pulling..."
+    ACR_LOGIN_SERVER=$(az acr show --name "$acrName" --resource-group "$resourceGroup" --query loginServer --output tsv)
+    kubectl create secret docker-registry acr-secret \
+        --namespace "$appNamespace" \
+        --docker-server="$ACR_LOGIN_SERVER" \
+        --docker-username="$acrName" \
+        --docker-password="$(az acr credential show --name "$acrName" --query passwords[0].value --output tsv)" \
+        --dry-run=client -o yaml | kubectl apply -f -
+    
     # Create ConfigMap
     print_status "Creating ConfigMap"
     cat > azure/k8s-configmap.yaml << EOF

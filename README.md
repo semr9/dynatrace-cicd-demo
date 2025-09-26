@@ -53,6 +53,19 @@ open http://localhost:3000
 - Docker installed and running
 - kubectl installed
 
+### ACR Secret Setup
+The application requires an ACR secret to pull Docker images from Azure Container Registry. This is automatically created by the deployment scripts, but can also be created manually:
+
+```bash
+# Manual ACR secret creation
+./scripts/create-acr-secret.sh
+```
+
+This script:
+- Creates a Kubernetes secret with ACR credentials
+- Allows pods to pull images from your Azure Container Registry
+- Required for all deployments using ACR images
+
 ### Quick Deployment
 ```bash
 # Step-by-step deployment (recommended)
@@ -94,11 +107,14 @@ open http://localhost:3000
    # Get AKS credentials
    az aks get-credentials --resource-group dynatrace-cicd-rg --name dynatrace-cicd-aks
    
+   # Create ACR secret for image pulling
+   ./scripts/create-acr-secret.sh
+   
    # Deploy application
    kubectl apply -f azure/k8s-configmap.yaml
    kubectl apply -f azure/k8s-deployments.yaml
-   kubectl apply -f k8s/services.yaml
-   kubectl apply -f k8s/ingress.yaml
+   kubectl apply -f azure/k8s-services.yaml
+   kubectl apply -f azure/k8s-ingress.yaml
    ```
 
 ### Access Application

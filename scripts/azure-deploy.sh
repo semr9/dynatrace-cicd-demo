@@ -206,6 +206,15 @@ deploy_to_k8s() {
     # Create namespace
     kubectl create namespace "$appNamespace" --dry-run=client -o yaml | kubectl apply -f -
     
+    # Create ACR secret for image pulling
+    print_status "Creating ACR secret for image pulling..."
+    kubectl create secret docker-registry acr-secret \
+        --namespace "$appNamespace" \
+        --docker-server="$ACR_LOGIN_SERVER" \
+        --docker-username="$acrName" \
+        --docker-password="$(az acr credential show --name "$acrName" --query passwords[0].value --output tsv)" \
+        --dry-run=client -o yaml | kubectl apply -f -
+    
     # Update ConfigMap with Azure-specific values
     cat > azure/k8s-configmap.yaml << EOF
 apiVersion: v1

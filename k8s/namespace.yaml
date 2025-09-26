@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: ecommerce-demo
-  labels:
-    name: ecommerce-demo
-    dynatrace: "true"
-    environment: "demo"

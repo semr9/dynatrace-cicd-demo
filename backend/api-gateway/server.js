@@ -27,39 +27,9 @@ app.use(helmet());
 app.use(cors());
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 
-// Raw body logging middleware (before express.json)
-app.use((req, res, next) => {
-  if (req.method === 'POST' && req.path.includes('/cart')) {
-    let rawBody = '';
-    
-    req.on('data', (chunk) => {
-      rawBody += chunk.toString();
-    });
-    
-    req.on('end', () => {
-      console.log('=== RAW REQUEST BODY DEBUG ===');
-      console.log('Path:', req.path);
-      console.log('Content-Type:', req.get('Content-Type'));
-      console.log('Raw Body:', rawBody);
-      console.log('Raw Body Length:', rawBody.length);
-      console.log('Raw Body Hex:', Buffer.from(rawBody).toString('hex'));
-      console.log('Raw Body Bytes:', [...Buffer.from(rawBody)]);
-      console.log('================================');
-      
-      logger.info('Raw request body debug:', {
-        path: req.path,
-        contentType: req.get('Content-Type'),
-        rawBody: rawBody,
-        rawBodyLength: rawBody.length,
-        rawBodyHex: Buffer.from(rawBody).toString('hex'),
-        rawBodyBytes: [...Buffer.from(rawBody)]
-      });
-    });
-  }
-  next();
-});
 
-app.use(express.json());
+
+// // app.use(express.json()); // Commented out to debug malformed JSON issue
 
 // Health check endpoint 
 app.get('/health', (req, res) => {

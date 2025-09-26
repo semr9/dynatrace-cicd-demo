@@ -1,0 +1,36 @@
+# Azure Deployment Configuration
+# Update these values according to your Azure environment
+
+# Resource Group
+resourceGroup: "dynatrace-cicd-rg"
+location: "East US"
+
+# Azure Container Registry
+acrName: "dynatracecicdacr"
+acrSku: "Basic"
+
+# Azure Database for PostgreSQL
+postgresServerName: "dynatrace-cicd-postgres"
+postgresAdminLogin: "dynatraceadmin"
+postgresAdminPassword: "Dynatrace2025!"
+postgresDatabaseName: "ecommerce"
+postgresSku: "B_Gen5_1"
+
+# Azure Kubernetes Service
+aksClusterName: "dynatrace-cicd-aks"
+aksNodeCount: 2
+aksVmSize: "Standard_B2s"
+aksVersion: "1.28"
+
+# Application Configuration
+appNamespace: "dynatrace-cicd"
+appName: "ecommerce-demo"
+
+# Dynatrace Configuration (Update with your values)
+dynatraceEnvironmentId: "YOUR_DYNATRACE_ENVIRONMENT_ID"
+dynatraceApiToken: "YOUR_DYNATRACE_API_TOKEN"
+dynatraceTenantId: "YOUR_DYNATRACE_TENANT_ID"
+
+# Domain Configuration (Optional - for custom domain)
+customDomain: "your-domain.com"
+sslCertName: "dynatrace-cicd-ssl"

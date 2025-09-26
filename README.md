@@ -46,6 +46,69 @@ open http://localhost:3000
 ./scripts/azure-deploy.sh
 `
 
+##  Azure Deployment
+
+### Prerequisites
+- Azure CLI installed and logged in
+- Docker installed and running
+- kubectl installed
+
+### Quick Deployment
+```bash
+# Step-by-step deployment (recommended)
+./scripts/azure-quick-deploy.sh
+
+# Or automated deployment
+./scripts/azure-deploy.sh
+```
+
+### Manual Deployment Steps
+1. **Update Configuration**
+   ```bash
+   # Edit azure/config.yaml with your values
+   nano azure/config.yaml
+   ```
+
+2. **Create Azure Resources**
+   ```bash
+   # Create resource group, ACR, PostgreSQL, and AKS
+   az group create --name dynatrace-cicd-rg --location "East US"
+   az acr create --resource-group dynatrace-cicd-rg --name dynatracecicdacr --sku Basic
+   az postgres server create --resource-group dynatrace-cicd-rg --name dynatrace-cicd-postgres --location "East US" --admin-user dynatraceadmin --admin-password "Dynatrace2025!" --sku-name B_Gen5_1
+   az aks create --resource-group dynatrace-cicd-rg --name dynatrace-cicd-aks --node-count 2 --node-vm-size Standard_B2s --attach-acr dynatracecicdacr
+   ```
+
+3. **Build and Push Images**
+   ```bash
+   # Login to ACR
+   az acr login --name dynatracecicdacr
+   
+   # Build and push all images
+   docker build -t dynatracecicdacr.azurecr.io/frontend:latest ./frontend/
+   docker push dynatracecicdacr.azurecr.io/frontend:latest
+   # ... repeat for all services
+   ```
+
+4. **Deploy to Kubernetes**
+   ```bash
+   # Get AKS credentials
+   az aks get-credentials --resource-group dynatrace-cicd-rg --name dynatrace-cicd-aks
+   
+   # Deploy application
+   kubectl apply -f azure/k8s-configmap.yaml
+   kubectl apply -f azure/k8s-deployments.yaml
+   kubectl apply -f k8s/services.yaml
+   kubectl apply -f k8s/ingress.yaml
+   ```
+
+### Access Application
+```bash
+# Get external IP
+kubectl get services -n dynatrace-cicd
+
+# Access at http://<EXTERNAL_IP>
+```
+
 ##  Project Structure
 
 `

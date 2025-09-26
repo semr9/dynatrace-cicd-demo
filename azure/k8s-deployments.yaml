@@ -16,6 +16,8 @@ spec:
       labels:
         app: frontend
     spec:
+      imagePullSecrets:
+      - name: acr-secret
       containers:
       - name: frontend
         image: dynatracecicdacr.azurecr.io/frontend:latest
@@ -23,11 +25,11 @@ spec:
         - containerPort: 80
         resources:
           requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
             memory: "64Mi"
             cpu: "50m"
-          limits:
-            memory: "128Mi"
-            cpu: "100m"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -44,11 +46,13 @@ spec:
       labels:
         app: api-gateway
     spec:
+      imagePullSecrets:
+      - name: acr-secret
       containers:
       - name: api-gateway
         image: dynatracecicdacr.azurecr.io/api-gateway:latest
         ports:
-        - containerPort: 3000
+        - containerPort: 4000
         env:
         - name: USER_SERVICE_URL
           value: "http://user-service:3001"
@@ -60,11 +64,11 @@ spec:
           value: "http://payment-service:3004"
         resources:
           requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
             memory: "64Mi"
             cpu: "50m"
-          limits:
-            memory: "128Mi"
-            cpu: "100m"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -81,6 +85,8 @@ spec:
       labels:
         app: user-service
     spec:
+      imagePullSecrets:
+      - name: acr-secret
       containers:
       - name: user-service
         image: dynatracecicdacr.azurecr.io/user-service:latest
@@ -99,11 +105,11 @@ spec:
               key: JWT_SECRET
         resources:
           requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
             memory: "64Mi"
             cpu: "50m"
-          limits:
-            memory: "128Mi"
-            cpu: "100m"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -120,6 +126,8 @@ spec:
       labels:
         app: product-service
     spec:
+      imagePullSecrets:
+      - name: acr-secret
       containers:
       - name: product-service
         image: dynatracecicdacr.azurecr.io/product-service:latest
@@ -133,11 +141,11 @@ spec:
               key: DATABASE_URL
         resources:
           requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
             memory: "64Mi"
             cpu: "50m"
-          limits:
-            memory: "128Mi"
-            cpu: "100m"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -154,6 +162,8 @@ spec:
       labels:
         app: order-service
     spec:
+      imagePullSecrets:
+      - name: acr-secret
       containers:
       - name: order-service
         image: dynatracecicdacr.azurecr.io/order-service:latest
@@ -172,11 +182,11 @@ spec:
               key: REDIS_URL
         resources:
           requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
             memory: "64Mi"
             cpu: "50m"
-          limits:
-            memory: "128Mi"
-            cpu: "100m"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -193,6 +203,8 @@ spec:
       labels:
         app: payment-service
     spec:
+      imagePullSecrets:
+      - name: acr-secret
       containers:
       - name: payment-service
         image: dynatracecicdacr.azurecr.io/payment-service:latest
@@ -206,11 +218,11 @@ spec:
               key: DATABASE_URL
         resources:
           requests:
+            memory: "32Mi"
+            cpu: "10m"
+          limits:
             memory: "64Mi"
             cpu: "50m"
-          limits:
-            memory: "128Mi"
-            cpu: "100m"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -239,3 +251,143 @@ spec:
           limits:
             memory: "64Mi"
             cpu: "50m"
+---
+# PostgreSQL Database
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: dynatrace-cicd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "ecommerce"
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          value: "password"
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: init-sql
+          mountPath: /docker-entrypoint-initdb.d
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+      - name: init-sql
+        configMap:
+          name: postgres-init
+---
+# PostgreSQL PersistentVolumeClaim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: dynatrace-cicd
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: default
+---
+# PostgreSQL Init ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: dynatrace-cicd
+data:
+  init.sql: |
+    -- Create tables
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(50) UNIQUE NOT NULL,
+        email VARCHAR(100) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        first_name VARCHAR(50),
+        last_name VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS products (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        description TEXT,
+        price DECIMAL(10,2) NOT NULL,
+        stock_quantity INTEGER DEFAULT 0,
+        image_url VARCHAR(255),
+        category VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS orders (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        total_amount DECIMAL(10,2) NOT NULL,
+        status VARCHAR(20) DEFAULT 'pending',
+        shipping_address TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS order_items (
+        id SERIAL PRIMARY KEY,
+        order_id INTEGER REFERENCES orders(id),
+        product_id INTEGER REFERENCES products(id),
+        quantity INTEGER NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS payments (
+        id SERIAL PRIMARY KEY,
+        order_id INTEGER REFERENCES orders(id),
+        amount DECIMAL(10,2) NOT NULL,
+        payment_method VARCHAR(50),
+        status VARCHAR(20) DEFAULT 'pending',
+        transaction_id VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Insert sample data
+    INSERT INTO products (name, description, price, stock_quantity, category) VALUES
+    ('MacBook Pro 16"', 'High-performance laptop for professionals and developers', 2499.99, 25, 'Electronics'),
+    ('iPhone 15 Pro', 'Latest generation smartphone with advanced camera system', 999.99, 50, 'Electronics'),
+    ('AirPods Pro', 'Wireless earbuds with active noise cancellation', 249.99, 100, 'Electronics'),
+    ('Samsung 4K Monitor', '32-inch 4K UHD monitor for productivity and gaming', 399.99, 30, 'Electronics'),
+    ('Mechanical Keyboard', 'RGB mechanical keyboard with Cherry MX switches', 149.99, 75, 'Electronics'),
+    ('Gaming Mouse', 'High-precision gaming mouse with customizable RGB lighting', 79.99, 60, 'Electronics'),
+    ('Standing Desk', 'Adjustable height standing desk for ergonomic workspace', 299.99, 20, 'Furniture'),
+    ('Office Chair', 'Ergonomic office chair with lumbar support', 199.99, 35, 'Furniture'),
+    ('Coffee Maker', 'Automatic drip coffee maker with timer function', 89.99, 40, 'Appliances'),
+    ('Blender', 'High-speed blender for smoothies and food preparation', 129.99, 25, 'Appliances')
+    ON CONFLICT DO NOTHING;

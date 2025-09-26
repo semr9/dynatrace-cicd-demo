@@ -27,26 +27,20 @@ app.use(helmet());
 app.use(cors());
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 
-// Debug middleware to log raw request body
+app.use(express.json());
+
+// Debug middleware to log parsed request body
 app.use((req, res, next) => {
   if (req.method === 'POST' && req.path.includes('/cart')) {
-    let body = '';
-    req.on('data', chunk => {
-      body += chunk.toString();
-    });
-    req.on('end', () => {
-      logger.info('Raw request body received:', {
-        path: req.path,
-        contentType: req.get('Content-Type'),
-        body: body,
-        bodyLength: body.length
-      });
+    logger.info('Parsed request body:', {
+      path: req.path,
+      contentType: req.get('Content-Type'),
+      body: req.body,
+      bodyType: typeof req.body
     });
   }
   next();
 });
-
-app.use(express.json());
 
 // Health check endpoint
 app.get('/health', (req, res) => {

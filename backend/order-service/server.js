@@ -34,7 +34,7 @@ app.use(cors());
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 app.use(express.json());
 
-// Health check
+// Health check (must be before /orders/:id route)
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'healthy', 
@@ -148,6 +148,16 @@ app.get('/orders', async (req, res) => {
     logger.error('Error fetching orders:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+// Health check for orders (must be before /orders/:id route)
+app.get('/orders/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'healthy', 
+    service: 'order-service',
+    endpoint: 'orders',
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.get('/orders/:id', async (req, res) => {

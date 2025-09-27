@@ -102,6 +102,10 @@ app.use('/api/cart', createProxyMiddleware({
     '^/api': ''
   },
   logLevel: 'debug',
+  onProxyReq: (proxyReq, req, res) => {
+    logger.info('Proxy request body:', req.body);
+    logger.info('Proxy request headers:', req.headers);
+  },
   onError: (err, req, res) => {
     logger.error('Cart service proxy error:', err);
     res.status(500).json({ error: 'Cart service unavailable' });

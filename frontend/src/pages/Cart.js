@@ -35,7 +35,13 @@ const Cart = () => {
 
   const checkout = async () => {
     try {
-      await axios.post('/api/orders', { items: cartItems });
+      await axios.post('/api/orders', { items: cartItems }
+        , {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
       alert('Order placed successfully!');
       setCartItems([]);
     } catch (err) {

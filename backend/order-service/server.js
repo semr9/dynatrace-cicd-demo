@@ -77,16 +77,7 @@ app.get('/cart', async (req, res) => {
 });
 
 app.post('/cart/add', async (req, res) => {
-  console.log('First print Product service - Request body:', req.body);
-
   try {
-    // Enhanced debug logging
-    console.log('Second print Product service - Request body:', JSON.stringify(req.body));
-    console.log('Order Service - Request headers:', JSON.stringify(req.headers));
-    console.log('Second print Product service - Content-Type:', req.get('Content-Type'));
-    console.log('Second print Product service - Content-Length:', req.get('Content-Length'));
-    console.log('Second print Product service - Request method:', req.method);
-    console.log('Second print Product service - Request URL:', req.url);
     
     logger.info('Cart add request received:', {
       body: req.body,
@@ -214,12 +205,27 @@ app.post('/orders', async (req, res) => {
   const client = await pool.connect();
   
   try {
-    await client.query('BEGIN');
+    logger.info('🚀 Starting order creation process', { userId: 1 });
+    
+    // Begin transaction
+    try {
+      await client.query('BEGIN');
+      logger.info('✅ Database transaction started');
+    } catch (txError) {
+      logger.error('❌ Failed to start transaction:', txError);
+      throw new Error('Failed to start database transaction');
+    }
     
     const { items, shipping_address } = req.body;
     const userId = 1; // Default user for demo
     
+    logger.info('📋 Order request received', { 
+      itemsCount: items?.length || 0, 
+      shippingAddress: shipping_address || 'Default Address' 
+    });
+    
     if (!items || items.length === 0) {
+      logger.warn('⚠️ No items provided in order request');
       throw new Error('No items provided');
     }
     
@@ -227,66 +233,160 @@ app.post('/orders', async (req, res) => {
     let totalAmount = 0;
     const orderItems = [];
     
+    logger.info(`🔍 Processing ${items.length} items for order calculation`);
+    
     for (const item of items) {
-      const product = await getProductDetails(item.product_id);
-      const itemTotal = product.price * item.quantity;
-      totalAmount += itemTotal;
-      
-      orderItems.push({
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price: product.price
-      });
+      try {
+        logger.info(`📦 Fetching product details for ID: ${item.product_id}`);
+        const product = await getProductDetails(item.product_id);
+        const itemTotal = product.price * item.quantity;
+        totalAmount += itemTotal;
+        
+        orderItems.push({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: product.price
+        });
+        
+        logger.info(`💰 Item processed: Product ${item.product_id} - ${item.quantity} x $${product.price} = $${itemTotal}`);
+      } catch (productError) {
+        logger.error(`❌ Failed to process item ${item.product_id}:`, productError);
+        throw new Error(`Failed to process product ${item.product_id}: ${productError.message}`);
+      }
     }
     
-    // Create order
-    const orderResult = await client.query(
-      'INSERT INTO orders (user_id, total_amount, shipping_address, status) VALUES ($1, $2, $3, $4) RETURNING *',
-      [userId, totalAmount, shipping_address || 'Default Address', 'pending']
-    );
+    logger.info(`💵 Total order amount calculated: $${totalAmount}`);
     
-    const order = orderResult.rows[0];
+    // Create order
+    let order;
+    try {
+      logger.info('📋 Creating order record in database');
+      const orderResult = await client.query(
+        'INSERT INTO orders (user_id, total_amount, shipping_address, status) VALUES ($1, $2, $3, $4) RETURNING *',
+        [userId, totalAmount, shipping_address || 'Default Address', 'pending']
+      );
+      
+      order = orderResult.rows[0];
+      logger.info(`✅ Order created successfully with ID: ${order.id}`, {
+        orderId: order.id,
+        userId: order.user_id,
+        totalAmount: order.total_amount,
+        status: order.status
+      });
+    } catch (orderError) {
+      logger.error('❌ Failed to create order record:', orderError);
+      throw new Error(`Failed to create order: ${orderError.message}`);
+    }
     
     // Create order items
-    for (const item of orderItems) {
-      await client.query(
-        'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ($1, $2, $3, $4)',
-        [order.id, item.product_id, item.quantity, item.price]
-      );
+    logger.info(`📦 Creating ${orderItems.length} order items`);
+    for (let i = 0; i < orderItems.length; i++) {
+      const item = orderItems[i];
+      try {
+        logger.info(`  - Creating order item ${i + 1}/${orderItems.length}: Product ${item.product_id}`);
+        const result = await client.query(
+          'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ($1, $2, $3, $4) RETURNING *',
+          [order.id, item.product_id, item.quantity, item.price]
+        );
+        
+        logger.info(`  ✅ Order item created with ID: ${result.rows[0]?.id}`, {
+          itemId: result.rows[0]?.id,
+          orderId: order.id,
+          productId: item.product_id,
+          quantity: item.quantity,
+          price: item.price
+        });
+      } catch (itemError) {
+        logger.error(`  ❌ Failed to create order item for product ${item.product_id}:`, itemError);
+        throw new Error(`Failed to create order item for product ${item.product_id}: ${itemError.message}`);
+      }
     }
     
     // Clear cart
-    await client.query('DELETE FROM cart WHERE user_id = $1', [userId]);
+    try {
+      logger.info(`🗑️ Clearing cart for user ${userId}`);
+      const deleteResult = await client.query('DELETE FROM cart WHERE user_id = $1', [userId]);
+      logger.info(`✅ Cart cleared successfully: ${deleteResult.rowCount} items removed`, {
+        userId: userId,
+        itemsRemoved: deleteResult.rowCount
+      });
+    } catch (cartError) {
+      logger.error('❌ Failed to clear cart:', cartError);
+      throw new Error(`Failed to clear cart: ${cartError.message}`);
+    }
     
     // Process payment (simulate)
     try {
+      logger.info(`💳 Processing payment for order ${order.id}`, { amount: totalAmount });
       const paymentResponse = await axios.post(
         `${process.env.PAYMENT_SERVICE_URL || 'http://localhost:3004'}/payments`,
         { order_id: order.id, amount: totalAmount }
       );
       
+      logger.info(`💳 Payment response received:`, { 
+        status: paymentResponse.data.status,
+        orderId: order.id 
+      });
+      
       if (paymentResponse.data.status === 'success') {
-        await client.query(
-          'UPDATE orders SET status = $1 WHERE id = $2',
-          ['processing', order.id]
-        );
+        try {
+          await client.query(
+            'UPDATE orders SET status = $1 WHERE id = $2',
+            ['processing', order.id]
+          );
+          logger.info(`✅ Order status updated to 'processing' for order ${order.id}`);
+        } catch (statusError) {
+          logger.error(`❌ Failed to update order status:`, statusError);
+          throw new Error(`Failed to update order status: ${statusError.message}`);
+        }
       }
     } catch (paymentError) {
-      logger.error('Payment processing failed:', paymentError);
-      // Order remains in pending status
+      logger.error('⚠️ Payment processing failed (order remains in pending status):', paymentError);
+      // Order remains in pending status - this is acceptable
     }
     
-    await client.query('COMMIT');
+    // Commit transaction
+    try {
+      await client.query('COMMIT');
+      logger.info('✅ Database transaction committed successfully');
+    } catch (commitError) {
+      logger.error('❌ Failed to commit transaction:', commitError);
+      throw new Error('Failed to commit database transaction');
+    }
     
-    logger.info(`Order created: ${order.id} for user ${userId}`);
+    logger.info(`🎉 Order ${order.id} completed successfully!`, {
+      orderId: order.id,
+      userId: userId,
+      totalAmount: totalAmount,
+      itemsCount: orderItems.length,
+      finalStatus: 'processing'
+    });
+    
     res.status(201).json(order);
     
   } catch (error) {
-    await client.query('ROLLBACK');
-    logger.error('Error creating order:', error);
+    // Rollback transaction
+    try {
+      await client.query('ROLLBACK');
+      logger.info('🔄 Database transaction rolled back');
+    } catch (rollbackError) {
+      logger.error('❌ Failed to rollback transaction:', rollbackError);
+    }
+    
+    logger.error('❌ Order creation failed:', {
+      error: error.message,
+      stack: error.stack,
+      userId: 1
+    });
+    
     res.status(500).json({ error: error.message || 'Internal server error' });
   } finally {
-    client.release();
+    try {
+      client.release();
+      logger.info('🔌 Database connection released');
+    } catch (releaseError) {
+      logger.error('❌ Failed to release database connection:', releaseError);
+    }
   }
 });
 

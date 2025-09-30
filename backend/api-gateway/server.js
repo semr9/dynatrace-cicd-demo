@@ -33,12 +33,26 @@ app.use(express.json());
 
 // Health check endpoint 
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'healthy', 
-    timestamp: new Date().toISOString(),
-    service: 'api-gateway',
-    version: '1.0.0'
-  });
+  try {
+    res.status(200).json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      service: 'api-gateway',
+      version: '1.0.0'
+    });
+  } catch (error) {
+    console.error('API Gateway - Health check error:', error);
+    logger.error('Health check error:', error);
+    
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        status: 'unhealthy', 
+        error: error.message,
+        timestamp: new Date().toISOString(),
+        service: 'api-gateway'
+      });
+    }
+  }
 });
 
 // API Routes with proxy middleware
@@ -105,17 +119,48 @@ app.use('/api/cart', createProxyMiddleware({
   timeout: 30000, // 30 seconds timeout
   proxyTimeout: 30000, // 30 seconds proxy timeout
   onProxyReq: (proxyReq, req, res) => {
-    console.log('API Gateway - Request body before proxy:', JSON.stringify(req.body));
-    console.log('API Gateway - Request body before proxy - normal :', req.body);
-    console.log('API Gateway - Request body after proxy:', JSON.stringify(proxyReq.body));
-    console.log('API Gateway - Request body after proxy - normal:', proxyReq.body);
-    console.log('API Gateway - Request headers:', JSON.stringify(req.headers));
-    console.log('API Gateway - Request method:', req.method);
-    console.log('API Gateway - Request URL:', req.url);
+    try {
+      console.log('API Gateway - Request body before proxy:', JSON.stringify(req.body));
+      console.log('API Gateway - Request body before proxy - normal :', req.body);
+      console.log('API Gateway - Request headers:', JSON.stringify(req.headers));
+      console.log('API Gateway - Request method:', req.method);
+      console.log('API Gateway - Request URL:', req.url);
+      
+      // Log proxy request details
+      console.log('API Gateway - Proxy request target:', proxyReq.path);
+      console.log('API Gateway - Proxy request headers:', proxyReq.getHeaders());
+      
+    } catch (error) {
+      console.error('API Gateway - Error in onProxyReq:', error);
+      logger.error('Error in onProxyReq callback:', error);
+    }
   },
   onError: (err, req, res) => {
-    logger.error('Cart service proxy error:', err);
-    res.status(500).json({ error: 'Cart service unavailable' });
+    try {
+      console.error('API Gateway - Cart service proxy error:', err);
+      logger.error('Cart service proxy error:', err);
+      
+      // Send appropriate error response
+      if (!res.headersSent) {
+        res.status(500).json({ 
+          error: 'Cart service unavailable',
+          message: err.message,
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (responseError) {
+      console.error('API Gateway - Error sending error response:', responseError);
+      logger.error('Error sending error response:', responseError);
+    }
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    try {
+      console.log('API Gateway - Proxy response status:', proxyRes.statusCode);
+      console.log('API Gateway - Proxy response headers:', proxyRes.headers);
+    } catch (error) {
+      console.error('API Gateway - Error in onProxyRes:', error);
+      logger.error('Error in onProxyRes callback:', error);
+    }
   }
 }));
 
@@ -125,14 +170,35 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
-  logger.info('API Gateway running on port ' + PORT);
-  console.log('API Gateway running on port ' + PORT);
-});
+try {
+  app.listen(PORT, () => {
+    logger.info('API Gateway running on port ' + PORT);
+    console.log('API Gateway running on port ' + PORT);
+  });
+} catch (error) {
+  console.error('API Gateway - Failed to start server:', error);
+  logger.error('Failed to start server:', error);
+  process.exit(1);
+}
 
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  logger.error('API Gateway Error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  try {
+    console.error('API Gateway - Unhandled error:', err);
+    logger.error('API Gateway Error:', err);
+    
+    // Don't send response if headers already sent
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: 'Internal server error',
+        message: err.message,
+        timestamp: new Date().toISOString(),
+        service: 'api-gateway'
+      });
+    }
+  } catch (responseError) {
+    console.error('API Gateway - Error in error handler:', responseError);
+    logger.error('Error in error handler:', responseError);
+  }
 });

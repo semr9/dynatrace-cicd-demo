@@ -30,7 +30,7 @@ app.use(morgan('combined', { stream: { write: message => logger.info(message.tri
 
 
 
-app.use(express.json());
+// app.use(express.json());
 
 // Health check endpoint 
 app.get('/health', (req, res) => {

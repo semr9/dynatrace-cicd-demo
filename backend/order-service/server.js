@@ -315,7 +315,16 @@ app.post('/orders', async (req, res) => {
       throw new Error(`Failed to clear cart: ${cartError.message}`);
     }
     
-    // Process payment (simulate)
+    // Commit transaction FIRST
+    try {
+      await client.query('COMMIT');
+      logger.info('✅ Database transaction committed successfully');
+    } catch (commitError) {
+      logger.error('❌ Failed to commit transaction:', commitError);
+      throw new Error('Failed to commit database transaction');
+    }
+    
+    // Process payment AFTER transaction is committed
     try {
       logger.info(`💳 Processing payment for order ${order.id}`, { amount: totalAmount });
       const paymentResponse = await axios.post(
@@ -343,15 +352,6 @@ app.post('/orders', async (req, res) => {
     } catch (paymentError) {
       logger.error('⚠️ Payment processing failed (order remains in pending status):', paymentError);
       // Order remains in pending status - this is acceptable
-    }
-    
-    // Commit transaction
-    try {
-      await client.query('COMMIT');
-      logger.info('✅ Database transaction committed successfully');
-    } catch (commitError) {
-      logger.error('❌ Failed to commit transaction:', commitError);
-      throw new Error('Failed to commit database transaction');
     }
     
     logger.info(`🎉 Order ${order.id} completed successfully!`, {

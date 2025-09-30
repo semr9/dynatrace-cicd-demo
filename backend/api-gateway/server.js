@@ -96,12 +96,14 @@ app.use('/api/payments', createProxyMiddleware({
 
 // Cart endpoints (handled by order service)
 app.use('/api/cart', createProxyMiddleware({
-  target: process.env.ORDER_SERVICE_URL || 'http://localhost:3003',
+  target: process.env.ORDER_SERVICE_URL || 'http://order-service:3003',
   changeOrigin: true,
   pathRewrite: {
     '^/api': ''
   },
   logLevel: 'debug',
+  timeout: 30000, // 30 seconds timeout
+  proxyTimeout: 30000, // 30 seconds proxy timeout
   onProxyReq: (proxyReq, req, res) => {
     logger.info('Proxy request body:', req.body);
     logger.info('Proxy request headers:', req.headers);

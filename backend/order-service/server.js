@@ -34,36 +34,7 @@ app.use(helmet());
 app.use(cors());
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 
-// Custom middleware to log raw request data BEFORE express.json()
-app.use((req, res, next) => {
-  console.log('=== ORDER SERVICE REQUEST DEBUG ===');
-  console.log('Method:', req.method);
-  console.log('URL:', req.url);
-  console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  console.log('Content-Type:', req.get('Content-Type'));
-  console.log('Content-Length:', req.get('Content-Length'));
-  console.log('Body (before parsing):', req.body);
-  console.log('req complete:', req);
-  console.log('=====================================');
-  next();
-});
-
 app.use(express.json());
-
-// Custom middleware to log request data AFTER express.json() parsing
-app.use((req, res, next) => {
-  if (req.method === 'POST' || req.method === 'PUT') {
-    console.log('=== ORDER SERVICE AFTER JSON PARSING ===');
-    console.log('Method:', req.method);
-    console.log('URL:', req.url);
-    console.log('Body (after parsing):', JSON.stringify(req.body, null, 2));
-    console.log('Body type:', typeof req.body);
-    console.log('Body keys:', req.body ? Object.keys(req.body) : 'No body');
-    console.log('==========================================');
-  }
-  next();
-});
-
 
 // Health check (must be before /orders/:id route)
 app.get('/health', (req, res) => {

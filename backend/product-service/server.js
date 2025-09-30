@@ -103,10 +103,11 @@ app.get('/products/:id', async (req, res) => {
 });
 
 app.post('/products', async (req, res) => {
+  console.log('First print Product service - Request body:', req.body);
   try {
     const { name, description, price, stock_quantity, image_url, category } = req.body;
     
-    console.log('Product service - Request body:', req.body);
+    console.log('Second print Product service - Request body:', req.body);
 
     if (!name || !price) {
       return res.status(400).json({ error: 'Name and price are required' });

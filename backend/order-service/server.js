@@ -76,7 +76,13 @@ app.get('/cart', async (req, res) => {
 
 app.post('/cart/add', async (req, res) => {
   try {
-    // Debug logging
+    // Enhanced debug logging
+    console.log('Order Service - Raw request body:', JSON.stringify(req.body));
+    console.log('Order Service - Request headers:', JSON.stringify(req.headers));
+    console.log('Order Service - Content-Type:', req.get('Content-Type'));
+    console.log('Order Service - Request method:', req.method);
+    console.log('Order Service - Request URL:', req.url);
+    
     logger.info('Cart add request received:', {
       body: req.body,
       headers: req.headers,

@@ -105,8 +105,13 @@ app.use('/api/cart', createProxyMiddleware({
   timeout: 30000, // 30 seconds timeout
   proxyTimeout: 30000, // 30 seconds proxy timeout
   onProxyReq: (proxyReq, req, res) => {
-    logger.info('Proxy request body:', req.body);
-    logger.info('Proxy request headers:', req.headers);
+    console.log('API Gateway - Request body before proxy:', JSON.stringify(req.body));
+    console.log('API Gateway - Request body before proxy - normal :', req.body);
+    console.log('API Gateway - Request body after proxy:', JSON.stringify(proxyReq.body));
+    console.log('API Gateway - Request body after proxy - normal:', proxyReq.body);
+    console.log('API Gateway - Request headers:', JSON.stringify(req.headers));
+    console.log('API Gateway - Request method:', req.method);
+    console.log('API Gateway - Request URL:', req.url);
   },
   onError: (err, req, res) => {
     logger.error('Cart service proxy error:', err);

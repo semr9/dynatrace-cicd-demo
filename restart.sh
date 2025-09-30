@@ -1,4 +1,7 @@
 #!/bin/bash
+echo "📥 Pulling latest changes from repository..."
+git pull
+
 echo "🔄 Stopping Dynatrace CI/CD Demo containers..."
 docker-compose down
 

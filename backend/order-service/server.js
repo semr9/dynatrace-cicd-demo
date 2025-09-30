@@ -1,4 +1,5 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -42,6 +43,7 @@ app.use((req, res, next) => {
   console.log('Content-Type:', req.get('Content-Type'));
   console.log('Content-Length:', req.get('Content-Length'));
   console.log('Body (before parsing):', req.body);
+  console.log('req complete:', req);
   console.log('=====================================');
   next();
 });

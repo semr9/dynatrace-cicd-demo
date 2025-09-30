@@ -32,7 +32,36 @@ const pool = new Pool({
 app.use(helmet());
 app.use(cors());
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
+
+// Custom middleware to log raw request data BEFORE express.json()
+app.use((req, res, next) => {
+  console.log('=== ORDER SERVICE REQUEST DEBUG ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('Content-Type:', req.get('Content-Type'));
+  console.log('Content-Length:', req.get('Content-Length'));
+  console.log('Body (before parsing):', req.body);
+  console.log('=====================================');
+  next();
+});
+
 app.use(express.json());
+
+// Custom middleware to log request data AFTER express.json() parsing
+app.use((req, res, next) => {
+  if (req.method === 'POST' || req.method === 'PUT') {
+    console.log('=== ORDER SERVICE AFTER JSON PARSING ===');
+    console.log('Method:', req.method);
+    console.log('URL:', req.url);
+    console.log('Body (after parsing):', JSON.stringify(req.body, null, 2));
+    console.log('Body type:', typeof req.body);
+    console.log('Body keys:', req.body ? Object.keys(req.body) : 'No body');
+    console.log('==========================================');
+  }
+  next();
+});
+
 
 // Health check (must be before /orders/:id route)
 app.get('/health', (req, res) => {
@@ -75,13 +104,16 @@ app.get('/cart', async (req, res) => {
 });
 
 app.post('/cart/add', async (req, res) => {
+  console.log('First print Product service - Request body:', req.body);
+
   try {
     // Enhanced debug logging
-    console.log('Order Service - Raw request body:', JSON.stringify(req.body));
+    console.log('Second print Product service - Request body:', JSON.stringify(req.body));
     console.log('Order Service - Request headers:', JSON.stringify(req.headers));
-    console.log('Order Service - Content-Type:', req.get('Content-Type'));
-    console.log('Order Service - Request method:', req.method);
-    console.log('Order Service - Request URL:', req.url);
+    console.log('Second print Product service - Content-Type:', req.get('Content-Type'));
+    console.log('Second print Product service - Content-Length:', req.get('Content-Length'));
+    console.log('Second print Product service - Request method:', req.method);
+    console.log('Second print Product service - Request URL:', req.url);
     
     logger.info('Cart add request received:', {
       body: req.body,

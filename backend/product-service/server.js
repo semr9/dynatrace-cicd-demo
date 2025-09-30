@@ -106,9 +106,13 @@ app.post('/products', async (req, res) => {
   try {
     const { name, description, price, stock_quantity, image_url, category } = req.body;
     
+    console.log('Product service - Request body:', req.body);
+
     if (!name || !price) {
       return res.status(400).json({ error: 'Name and price are required' });
     }
+
+    console.log("Name and price are set");
     
     const result = await pool.query(
       'INSERT INTO products (name, description, price, stock_quantity, image_url, category) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',

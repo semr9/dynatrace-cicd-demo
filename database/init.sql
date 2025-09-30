@@ -1,7 +1,4 @@
--- Create database if it doesn't exist
-CREATE DATABASE IF NOT EXISTS ecommerce;
-
--- Connect to ecommerce database
+-- Connect to ecommerce database (already created by POSTGRES_DB env var)
 \c ecommerce;
 
 -- Create users table

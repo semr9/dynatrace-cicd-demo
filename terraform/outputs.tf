@@ -20,17 +20,7 @@ output "acr_admin_password" {
   description = "ACR admin password"
   value       = azurerm_container_registry.acr.admin_password
   sensitive   = true
-}
 
-output "postgres_server_fqdn" {
-  description = "PostgreSQL server FQDN"
-  value       = azurerm_postgresql_server.postgres.fqdn
-}
-
-output "postgres_connection_string" {
-  description = "PostgreSQL connection string"
-  value       = "postgresql://${var.postgres_admin_username}:${var.postgres_admin_password}@${azurerm_postgresql_server.postgres.fqdn}:5432/${var.postgres_database_name}?sslmode=require"
-  sensitive   = true
 }
 
 output "aks_cluster_name" {
@@ -73,22 +63,4 @@ output "useful_commands" {
     describe_pod = "kubectl describe pod <pod-name> -n ${kubernetes_namespace.app.metadata[0].name}"
   }
 }
-
-# ArgoCD Outputs
-output "argocd_server_url" {
-  description = "ArgoCD server URL"
-  value       = "https://${kubernetes_service.argocd_server_lb.status[0].load_balancer[0].ingress[0].ip}"
-}
-
-output "argocd_admin_password" {
-  description = "ArgoCD admin password (base64 encoded)"
-  value       = try(data.kubernetes_secret.argocd_admin_password.data.password, "Run: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d")
-  sensitive   = true
-}
-
-output "argocd_login_command" {
-  description = "Command to get ArgoCD admin password"
-  value       = "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d && echo"
-}
-
 

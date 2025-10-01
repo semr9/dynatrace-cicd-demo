@@ -18,15 +18,15 @@ postgres_server_name    = "dynatrace-cicd-postgres"
 postgres_admin_username = "dynatraceadmin"
 postgres_admin_password = "Dynatrace2025!"
 postgres_database_name  = "ecommerce"
-postgres_sku            = "B_Gen5_1"  # Basic tier: 1 vCore, 2GB RAM
-postgres_storage_mb     = 5120        # 5GB
+postgres_sku            = "B_Gen5_1" # Basic tier: 1 vCore, 2GB RAM
+postgres_storage_mb     = 32768      # 5GB
 postgres_version        = "11"
 
 # AKS Configuration
 aks_cluster_name       = "dynatrace-cicd-aks"
 aks_node_count         = 1
-aks_vm_size            = "Standard_B2s"  # 2 vCPU, 4GB RAM
-aks_kubernetes_version = "1.28"
+aks_vm_size            = "Standard_B2s" # 2 vCPU, 4GB RAM
+aks_kubernetes_version = "1.31"
 
 # Kubernetes Configuration
 kubernetes_namespace = "dynatrace-cicd"

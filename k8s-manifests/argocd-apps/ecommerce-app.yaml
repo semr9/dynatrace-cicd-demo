@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ecommerce-app
+  namespace: argocd
+spec:
+  project: default
+  
+  # Source repository
+  source:
+    repoURL: https://github.com/YOUR_USERNAME/YOUR_REPO.git  # Update this!
+    targetRevision: main
+    path: k8s-manifests/applications
+  
+  # Destination AKS cluster
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dynatrace-cicd
+  
+  # Sync policy
+  syncPolicy:
+    automated:
+      prune: true        # Delete resources not in Git
+      selfHeal: true     # Auto-sync if manual changes detected
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  
+  # Health checks
+  revisionHistoryLimit: 10
+
+

@@ -1,0 +1,19 @@
+# Kustomization for all applications
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: dynatrace-cicd
+
+resources:
+  - redis/deployment.yaml
+  - frontend/deployment.yaml
+  - api-gateway/deployment.yaml
+  - user-service/deployment.yaml
+  - product-service/deployment.yaml
+  - order-service/deployment.yaml
+  - payment-service/deployment.yaml
+
+commonLabels:
+  environment: production
+  managed-by: argocd
+

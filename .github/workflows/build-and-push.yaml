@@ -1,0 +1,72 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+  workflow_dispatch:
+
+env:
+  ACR_NAME: dynatracecicdacr
+  REGISTRY: dynatracecicdacr.azurecr.io
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - name: frontend
+            path: ./frontend
+          - name: api-gateway
+            path: ./backend/api-gateway
+          - name: user-service
+            path: ./backend/user-service
+          - name: product-service
+            path: ./backend/product-service
+          - name: order-service
+            path: ./backend/order-service
+          - name: payment-service
+            path: ./backend/payment-service
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
+      - name: Login to ACR
+        run: |
+          az acr login --name ${{ env.ACR_NAME }}
+      
+      - name: Build and Push Docker Image
+        run: |
+          IMAGE_TAG=${{ env.REGISTRY }}/${{ matrix.service.name }}:${{ github.sha }}
+          IMAGE_LATEST=${{ env.REGISTRY }}/${{ matrix.service.name }}:latest
+          
+          docker build -t $IMAGE_TAG -t $IMAGE_LATEST ${{ matrix.service.path }}
+          docker push $IMAGE_TAG
+          docker push $IMAGE_LATEST
+          
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+      
+      - name: Update Kubernetes Manifest
+        run: |
+          # Update the image tag in k8s manifests
+          sed -i "s|image: .*/${{ matrix.service.name }}:.*|image: ${{ env.REGISTRY }}/${{ matrix.service.name }}:${{ github.sha }}|g" k8s-manifests/applications/${{ matrix.service.name }}/deployment.yaml
+      
+      - name: Commit and Push Manifest Changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add k8s-manifests/
+          git commit -m "Update ${{ matrix.service.name }} image to ${{ github.sha }}" || echo "No changes to commit"
+          git push || echo "No changes to push"
+
+

@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: https://raw.githubusercontent.com/Dynatrace/dynatrace-operator/main/config/helm/repos/stable
     chart: dynatrace-operator
-    targetRevision: v1.3.0
+    targetRevision: v1.7.1
   
   destination:
     server: https://kubernetes.default.svc

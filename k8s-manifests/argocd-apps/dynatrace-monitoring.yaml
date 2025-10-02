@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dynatrace-monitoring
+  namespace: argocd
+spec:
+  project: default
+  
+  source:
+    repoURL: https://github.com/semr9/dynatrace-cicd-demo.git
+    targetRevision: main
+    path: k8s-manifests/dynatrace
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dynatrace
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  
+  revisionHistoryLimit: 10

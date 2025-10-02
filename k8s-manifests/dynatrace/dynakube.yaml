@@ -10,7 +10,7 @@ metadata:
     dynatrace.com/created-by: "dynatrace.kubernetes"
 type: Opaque
 ---
-apiVersion: dynatrace.com/v1beta5
+apiVersion: dynatrace.com/v1beta2
 kind: DynaKube
 metadata:
   name: dynatrace-cicd-aks

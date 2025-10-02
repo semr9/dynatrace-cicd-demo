@@ -22,6 +22,7 @@ metadata:
 # Link to api reference for further information: https://docs.dynatrace.com/docs/ingest-from/setup-on-k8s/reference/dynakube-parameters
 spec:
   apiUrl: https://lqr29060.sprint.dynatracelabs.com/api
+  tokens: dynatrace-cicd-aks
   metadataEnrichment:
     enabled: true
   oneAgent:

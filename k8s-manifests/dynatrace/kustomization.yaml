@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: dynatrace
 
 resources:
+  - namespace.yaml
   - dynakube.yaml
 
 commonLabels:

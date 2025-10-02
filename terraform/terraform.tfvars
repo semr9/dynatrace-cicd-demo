@@ -24,7 +24,7 @@ postgres_version        = "11"
 
 # AKS Configuration
 aks_cluster_name       = "dynatrace-cicd-aks"
-aks_node_count         = 3
+aks_node_count         = 4
 aks_vm_size            = "Standard_B2s" # 2 vCPU, 4GB RAM
 aks_kubernetes_version = "1.31"
 

@@ -41,10 +41,10 @@ spec:
       - debugging
     resources:
       requests:
-        cpu: 500m
+        cpu: 100m
         memory: 1.5Gi
       limits:
-        cpu: 1000m
+        cpu: 200m
         memory: 1.5Gi
   templates:
     extensionExecutionController:
